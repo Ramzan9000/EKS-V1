@@ -1,0 +1,3 @@
+[submodule "eks-assignment-v1"]
+	path = eks-assignment-v1
+	url = https://github.com/codercohq/eks-assignment-v1
