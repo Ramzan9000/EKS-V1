@@ -1,0 +1,19 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+
+metadata:
+  name: {{ .Values.certManager.clusterIssuer }}
+
+spec:
+  acme:
+    email: {{ .Values.certManager.email | quote }}
+    server: {{ .Values.certManager.server | quote }}
+
+    privateKeySecretRef:
+      name: {{ .Values.certManager.privateKeySecret }}
+
+    solvers:
+      - dns01:
+          route53:
+            region: {{ .Values.certManager.region | quote }}
+            hostedZoneID: {{ .Values.certManager.hostedZoneID | quote }}

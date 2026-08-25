@@ -1,0 +1,29 @@
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+
+metadata:
+  name: website-probe
+  namespace: monitoring
+  labels:
+    prometheus: kube-prometheus-stack
+
+spec:
+  jobName: blackbox-http
+
+  interval: 60s
+  scrapeTimeout: 10s
+
+  module: http_2xx
+
+  prober:
+    url: blackbox-exporter.monitoring.svc.cluster.local:9115
+    scheme: http
+    path: /probe
+
+  targets:
+    staticConfig:
+      static:
+        - https://ramzans-lab.com
+
+  
+  #not finished need to add  the correct prober url using the method #

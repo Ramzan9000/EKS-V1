@@ -1,0 +1,49 @@
+
+service 
+
+Values.service.port
+
+
+ingress 
+
+.Values.ingress.clusterIssuer
+.Values.ingress.className ( this is just nginx )
+{{ .Values.ingress.host }} ( this is web app name e.g. ramzans-lab.com)
+
+
+ClusterIssuer
+
+.Values.certManager.clusterIssuer 
+.Values.certManager.email | quote ( our email for any updates/info regarding the cert use our gmail one not outlook)
+.Values.certManager.server | quote ( link to letsencrypt to get cert , use prod one for prod and staging link for dev)
+.Values.certManager.privateKeySecret  (name of secret for private key make it something like "letsencrypt-account-key" )
+.Values.certManager.region | quote ( region of our aws )
+.Values.certManager.hostedZoneID | quote ( hosted zone id )
+
+hpa 
+.Values.autoscaling.minReplicas ( minimum pods )
+.Values.autoscaling.maxReplicas ( maximum pods )
+.Values.autoscaling.targetCPUUtilizationPercentage ( how much cpu my pods can use in % , keep this 70 and make in conjuction to deployment yaml CPU requests )
+
+pdb 
+.Values.pdb.minAvailable ( minimum pod avaiable in volunitary disruption just put 1 here or something )
+
+
+resourceQuota
+
+.Values.resourceQuota.requestsCpu | quote  ( total resevered max cpu for namespace )
+.Values.resourceQuota.requestsMemory | quote ( total resevered max memory for namespace )
+.Values.resourceQuota.limitsCpu | quote ( total absolute max cpu for namespace)
+.Values.resourceQuota.limitsMemory | quote ( total max memory for namespace )
+.Values.resourceQuota.pods | quote (total max pods for namespace )
+
+limitRange
+.Values.limitRange.defaultCpuLimit | quote ( total resevered max cpu for pod )
+.Values.limitRange.defaultMemoryLimit | quote ( total resevered max memory for pod )
+
+defaultRequest:
+.Values.limitRange.defaultCpuRequest | quote ( total absolute max cpu for pod )
+.Values.limitRange.defaultMemoryRequest | quote ( total absolute max memory for pod )
+
+NetworkPolicy
+.Values.service.targetPort ( the http port in service yaml that links to the http name for the port made in deployment yaml)

@@ -1,0 +1,26 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+
+metadata:
+  name: website-alerts
+  namespace: monitoring
+  labels:
+    prometheus: kube-prometheus-stack
+
+spec:
+  groups:
+    - name: website
+      rules:
+        - alert: WebsiteDown
+          expr: probe_success{job="blackbox-http"} == 0
+          for: 2m
+
+          labels:
+            severity: critical
+
+          annotations:
+            summary: Website is down
+            description: "The website has failed its Blackbox HTTP probe for more than 2 minutes."
+
+
+      #complete i think#

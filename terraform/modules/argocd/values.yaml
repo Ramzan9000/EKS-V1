@@ -1,0 +1,7 @@
+crds:
+  install: true
+  keep: true
+
+server:
+  service:
+    type: ClusterIP

@@ -1,0 +1,29 @@
+
+
+
+# =============================
+# Terraform
+# =============================
+*.tfstate
+*.tfstate.*
+.terraform/
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+
+# =============================
+# OS / Editor junk
+# =============================
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.sublime-workspace
+*.sublime-project
+
+**/.terraform/*
+*.tfstate
+*.tfstate.*
