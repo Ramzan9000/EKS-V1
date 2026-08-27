@@ -32,3 +32,18 @@ variable "loki_service_account" {
   description = "Name of the Kubernetes ServiceAccount used by Loki."
   type        = string
 }
+
+variable "external_dns_role_arn" {
+  description = "IAM role ARN for ExternalDNS"
+  type        = string
+}
+
+variable "external_dns_namespace" {
+  description = "Kubernetes namespace where ExternalDNS is deployed"
+  type        = string
+}
+
+variable "external_dns_service_account" {
+  description = "Kubernetes service account used by ExternalDNS"
+  type        = string
+}

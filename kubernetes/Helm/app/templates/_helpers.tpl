@@ -1,4 +1,3 @@
-
 {{/*
 Create the full name used by the Kubernetes resources.
 */}}
@@ -31,4 +30,3 @@ This exact name is also used by the EKS Pod Identity association.
 {{- define "app.serviceAccountName" -}}
 cert-manager
 {{- end }}
-

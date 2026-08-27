@@ -1,0 +1,79 @@
+name: Docker CI Prod
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "docker/**"
+      - "kubernetes/**"
+
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "docker/**"
+      - "kubernetes/**"
+
+permissions:
+  id-token: write
+  contents: write
+
+env:
+  AWS_REGION: eu-west-2
+  ECR_REPOSITORY: eks-2048
+  AWS_ROLE_ARN: arn:aws:iam::557690622944:role/eks-v1-docker-prod
+
+jobs:
+  docker:
+    name: Docker Prod
+    runs-on: ubuntu-latest
+
+    environment:
+      name: production
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Verify AWS identity
+        run: aws sts get-caller-identity
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            -f docker/Dockerfile \
+            -t ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }} \
+            .
+
+      - name: Push Docker image
+        run: |
+          docker push \
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
+
+      - name: Update Kubernetes image
+        run: |
+          sed -i "s|image: .*|image: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}|" \
+            kubernetes/Helm/app/templates/deployment.yaml
+
+      - name: Commit Kubernetes change
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add kubernetes/Helm/app/templates/deployment.yaml
+
+          git diff --cached --quiet || \
+            git commit -m "Update production image to ${GITHUB_SHA}"
+
+          git push

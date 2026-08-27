@@ -7,11 +7,6 @@ variable "cidr_block" {
 }
 
 
-variable "region" {
-  type        = string
-  description = "AWS region of deployment"
-}
-
 variable "private_subnet_az_1_cidr" {
   type        = string
   description = "Cidr for the first private VPC"
@@ -85,6 +80,15 @@ variable "loki_service_account" {
   type        = string
 }
 
+variable "external_dns_namespace" {
+  description = "Kubernetes namespace where ExternalDNS is deployed"
+  type        = string
+}
+
+variable "external_dns_service_account" {
+  description = "Kubernetes service account used by ExternalDNS"
+  type        = string
+}
 
 
 ### node-group module ###

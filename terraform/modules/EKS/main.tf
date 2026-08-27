@@ -8,7 +8,7 @@
     subnet_ids              = var.subnet_ids
     endpoint_private_access = true
     endpoint_public_access  = true
-    public_access_cidrs     = var.public_access_cidrs # our ip but for secruity idk if i should our specifc one to values yaml because when the project is in my repo cant everyone see my ip then #
+    public_access_cidrs     = var.public_access_cidrs 
   }
 
   encryption_config {

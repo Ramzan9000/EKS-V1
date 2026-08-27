@@ -1,0 +1,126 @@
+name: Docker CI Dev
+
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - "docker/**"
+      - "kubernetes/**"
+
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "docker/**"
+      - "kubernetes/**"
+
+  workflow_run:
+    workflows: ["Terraform CI Dev"]
+    types:
+      - completed
+
+permissions:
+  id-token: write
+  contents: write
+
+env:
+  AWS_REGION: eu-west-2
+  ECR_REPOSITORY: eks-2048
+  AWS_ROLE_ARN: arn:aws:iam::557690622944:role/eks-v1-docker-dev
+
+jobs:
+  docker:
+    if: >-
+      github.event_name != 'workflow_run' ||
+      github.event.workflow_run.conclusion == 'success'
+
+    name: Build, Push and Update GitOps
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Verify AWS identity
+        run: aws sts get-caller-identity
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set image variables
+        id: image
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          echo "image_uri=${REGISTRY}/${ECR_REPOSITORY}" >> "$GITHUB_OUTPUT"
+          echo "image_tag=${IMAGE_TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            -f docker/Dockerfile \
+            -t "${{ steps.image.outputs.image_uri }}:${{ steps.image.outputs.image_tag }}" \
+            .
+
+      - name: Push Docker image
+        run: |
+          docker push \
+            "${{ steps.image.outputs.image_uri }}:${{ steps.image.outputs.image_tag }}"
+
+      - name: Update Helm image tag
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          IMAGE_TAG: ${{ steps.image.outputs.image_tag }}
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import os
+          import re
+
+          path = Path("kubernetes/Helm/app/values.yaml")
+          text = path.read_text()
+
+          text, count = re.subn(
+              r'(?m)^(\s*tag:\s*).*$',
+              rf'\g<1>"{os.environ["IMAGE_TAG"]}"',
+              text,
+              count=1
+          )
+
+          if count != 1:
+              raise SystemExit(
+                  "Could not find exactly one image.tag entry in values.yaml"
+              )
+
+          path.write_text(text)
+          PY
+
+      - name: Check Helm values change
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          git diff -- kubernetes/Helm/app/values.yaml
+
+      - name: Commit and push image tag
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add kubernetes/Helm/app/values.yaml
+
+          if git diff --cached --quiet; then
+            echo "No image tag change to commit."
+            exit 0
+          fi
+
+          git commit -m "chore: update image to ${GITHUB_SHA}"
+          git push

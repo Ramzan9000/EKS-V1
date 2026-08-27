@@ -37,3 +37,12 @@ resource "aws_eks_pod_identity_association" "loki" {
   role_arn        = var.loki_role_arn
 }
 
+
+# ExternalDNS pod identity association
+
+resource "aws_eks_pod_identity_association" "external_dns" {
+  cluster_name    = var.cluster_name
+  namespace       = var.external_dns_namespace
+  service_account = var.external_dns_service_account
+  role_arn        = var.external_dns_role_arn
+}
