@@ -1,75 +1,78 @@
-terraform { 
+terraform {
 
-  required_providers { 
+  required_providers {
 
-    aws = { 
+    aws = {
 
-      source  = "hashicorp/aws" 
+      source = "hashicorp/aws"
 
-      version = "~> 6.0" 
+      version = "~> 6.0"
 
-    } 
-
-
-    helm = { 
-
-      source  = "hashicorp/helm" 
-
-      version = "~> 3.0" 
-
-    } 
-
-  } 
-
-} 
-
-  
-provider "aws" { 
-
-  region = var.aws_region 
-
-} 
+    }
 
 
-provider "helm" { 
+    helm = {
 
-  kubernetes = { 
+      source = "hashicorp/helm"
 
-    host = module.eks.cluster_endpoint 
+      version = "~> 3.0"
 
-    cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data) 
+    }
+
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "~> 2.0"
+    }
+
+  }
+
+}
 
 
-    exec = { 
+provider "aws" {
 
-      api_version = "client.authentication.k8s.io/v1" 
+  region = var.aws_region
 
-      command = "aws" 
+}
 
-  
 
-      args = [ 
+provider "helm" {
 
-        "eks", 
+  kubernetes = {
 
-        "get-token", 
+    host = module.eks.cluster_endpoint
 
-        "--cluster-name", 
+    cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
 
-        module.eks.cluster_name, 
 
-        "--region", 
+    exec = {
 
-        var.aws_region 
+      api_version = "client.authentication.k8s.io/v1"
 
-      ] 
+      command = "aws"
 
-    } 
 
-  } 
 
-} 
+      args = [
 
- 
+        "eks",
+
+        "get-token",
+
+        "--cluster-name",
+
+        module.eks.cluster_name,
+
+        "--region",
+
+        var.aws_region
+
+      ]
+
+    }
+
+  }
+
+}
 
  

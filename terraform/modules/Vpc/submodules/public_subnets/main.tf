@@ -4,6 +4,9 @@ resource "aws_subnet" "public_az_1" {
   availability_zone       = var.availability_zone_1
   map_public_ip_on_launch = true
 
+  tags = {
+    "kubernetes.io/role/elb" = "1"
+  }
 }
 
 
@@ -12,5 +15,9 @@ resource "aws_subnet" "public_az_2" {
   cidr_block              = var.public_subnet_az_2_cidr
   availability_zone       = var.availability_zone_2
   map_public_ip_on_launch = true
+
+  tags = {
+    "kubernetes.io/role/elb" = "1"
+  }
 
 }

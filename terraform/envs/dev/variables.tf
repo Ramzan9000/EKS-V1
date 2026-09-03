@@ -63,12 +63,22 @@ variable "cluster_name" {
 
 variable "loki_bucket_name" {
   description = "Globally unique name for the S3 bucket used by Loki for log storage."
-  type = string
+  type        = string
 }
 
 
 
 ### pod_identity module ###
+
+variable "cert_manager_namespace" {
+  description = "Kubernetes namespace in which the cert_manager ServiceAccount is deployed."
+  type        = string
+}
+
+variable "cert_manager_service_account" {
+  description = "Name of the Kubernetes ServiceAccount used by cert_manager."
+  type        = string
+}
 
 variable "loki_namespace" {
   description = "Kubernetes namespace where Loki is deployed."

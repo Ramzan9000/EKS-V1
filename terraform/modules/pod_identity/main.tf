@@ -22,8 +22,8 @@ resource "aws_eks_pod_identity_association" "aws_load_balancer_controller" {
 
 resource "aws_eks_pod_identity_association" "cert_manager" {
   cluster_name    = var.cluster_name
-  namespace       = "cert-manager"
-  service_account = "cert-manager"
+  namespace       = var.cert_manager_namespace
+  service_account = var.cert_manager_service_account
   role_arn        = var.cert_manager_role_arn
 }
 

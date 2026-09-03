@@ -18,6 +18,16 @@ variable "cert_manager_role_arn" {
   type        = string
 }
 
+variable "cert_manager_namespace" {
+  description = "Kubernetes namespace in which the cert_manager ServiceAccount is deployed."
+  type        = string
+}
+
+variable "cert_manager_service_account" {
+  description = "Name of the Kubernetes ServiceAccount used by cert_manager."
+  type        = string
+}
+
 variable "loki_role_arn" {
   description = "ARN of the IAM role assigned to the Loki ServiceAccount."
   type        = string

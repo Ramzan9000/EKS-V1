@@ -64,7 +64,7 @@ node_max_unavailable = 1
 
 loki_bucket_name = "eks-v1-dev-loki-logs"
 
-loki_namespace = "logging"       #check this and the service account matches the helm charts ones values#
+loki_namespace = "logging"
 
 loki_service_account = "loki"
 
@@ -73,5 +73,14 @@ loki_service_account = "loki"
 # External DNS
 # ============================================================
 
-external_dns_namespace = "external-dns"
+external_dns_namespace       = "external-dns"
 external_dns_service_account = "external-dns"
+
+
+
+#============================================================
+# cert manager
+# ============================================================
+
+cert_manager_namespace       = "cert-manager"
+cert_manager_service_account = "cert-manager"

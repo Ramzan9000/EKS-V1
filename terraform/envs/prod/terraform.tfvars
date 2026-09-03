@@ -75,3 +75,10 @@ loki_service_account = "loki"
 
 external_dns_namespace       = "external-dns"
 external_dns_service_account = "external-dns"
+
+#============================================================
+# cert manager
+# ============================================================
+
+cert_manager_namespace = "cert-manager"
+cert_manager_service_account = "cert-manager"

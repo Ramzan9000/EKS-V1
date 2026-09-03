@@ -3,7 +3,7 @@
 # ============================================================
 
 image:
-  repository: "123456789.dkr.ecr.eu-west-2.amazonaws.com/eks-v1"
+  repository: "557690622944.dkr.ecr.eu-west-2.amazonaws.com/eks-2048"
   tag: "abc123"
   pullPolicy: IfNotPresent
 
@@ -49,7 +49,7 @@ certManager:
   server: "https://acme-v02.api.letsencrypt.org/directory"
   privateKeySecret: "letsencrypt-account-key"
   region: "eu-west-2"
-  hostedZoneID: "Z0374799DIZ6Q01HXZ9I"
+  hostedZoneID: "Z0974659DE1C1BSWFR2U"
 
 
 # ============================================================

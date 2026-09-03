@@ -76,6 +76,10 @@ module "pod_identity" {
 
   cert_manager_role_arn = module.iam.cert_manager_role_arn
 
+  cert_manager_namespace = var.cert_manager_namespace
+
+  cert_manager_service_account = var.cert_manager_service_account
+
   external_dns_role_arn = module.iam.external_dns_role_arn
 
   external_dns_namespace = var.external_dns_namespace
@@ -85,7 +89,7 @@ module "pod_identity" {
   loki_role_arn = module.iam.loki_role_arn
 
   loki_namespace = var.loki_namespace
-  
+
   loki_service_account = var.loki_service_account
 
   depends_on = [
@@ -93,20 +97,6 @@ module "pod_identity" {
     module.iam
   ]
 }
-
-
-### security_group module ###
-
-module "security_groups" {
-  source = "../../modules/security_groups"
-
-  cluster_name = var.cluster_name
-
-  vpc_id = module.vpc.vpc_id
-
-  cluster_security_group_id = module.eks.cluster_security_group_id
-}
-
 
 
 ### node-group module ###
@@ -128,12 +118,9 @@ module "node_groups" {
 
   max_unavailable = var.node_max_unavailable
 
-  node_security_group_id = module.security_groups.node_security_group_id
-
   depends_on = [
     module.eks,
-    module.iam,
-    module.security_groups
+    module.iam
   ]
 }
 
@@ -143,9 +130,9 @@ module "node_groups" {
 module "eks" {
   source = "../../modules/eks"
 
-  cluster_name        = var.cluster_name
-  cluster_role_arn    = module.iam.eks_cluster_role_arn
-  kubernetes_version  = var.kubernetes_version
+  cluster_name       = var.cluster_name
+  cluster_role_arn   = module.iam.eks_cluster_role_arn
+  kubernetes_version = var.kubernetes_version
 
   subnet_ids = concat(
     module.vpc.public_subnet_ids,
@@ -173,6 +160,7 @@ module "aws_load_balancer_controller" {
 
   depends_on = [
     module.eks,
+    module.node_groups,
     module.pod_identity
   ]
 }
@@ -183,6 +171,7 @@ module "argocd" {
   source = "../../modules/argocd"
 
   depends_on = [
-    module.eks
+    module.eks,
+    module.node_groups
   ]
 }

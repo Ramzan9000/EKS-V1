@@ -42,8 +42,3 @@ variable "max_unavailable" {
   description = "Maximum number of worker nodes that can be unavailable during a managed node-group update."
   type        = number
 }
-
-variable "node_security_group_id" {
-  description = "ID of the custom security group attached to the EKS worker nodes."
-  type        = string
-}
