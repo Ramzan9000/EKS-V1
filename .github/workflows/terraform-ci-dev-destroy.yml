@@ -56,46 +56,51 @@ jobs:
               -p '{"spec":{"syncPolicy":{"automated":null}}}' || true
           done
 
-          echo "Argo CD automated sync/self-heal is now disabled for the current Applications."
+          echo "Argo CD automated sync/self-heal is disabled."
 
-      - name: Delete Argo CD Applications and GitOps workloads
+      - name: Prepare Argo CD Applications for cascading deletion
         run: |
           apps=$(kubectl get applications.argoproj.io -n argocd -o name 2>/dev/null || true)
 
           if [ -z "$apps" ]; then
-            echo "No Argo CD Applications to delete."
-          else
-            # Ensure Application deletion cascades to the Kubernetes resources it manages.
-            for app in $apps; do
-              kubectl patch "$app" -n argocd --type merge \
-                -p '{"metadata":{"finalizers":["resources-finalizer.argocd.argoproj.io"]}}' || true
-            done
-
-            for app in $apps; do
-              echo "Deleting $app and its managed resources"
-              kubectl delete "$app" -n argocd --wait=false || true
-            done
+            echo "No Argo CD Applications found."
+            exit 0
           fi
 
-          # Do not allow any remaining LoadBalancer Service to survive into Terraform destroy.
-          # These Services are what cause the cloud load balancers to exist.
-          services=$(kubectl get svc -A -o json |
-            jq -r '.items[] | select(.spec.type == "LoadBalancer") | [.metadata.namespace,.metadata.name] | @tsv')
+          for app in $apps; do
+            echo "Adding Argo CD resources finalizer to $app"
+            kubectl patch "$app" -n argocd --type merge \
+              -p '{"metadata":{"finalizers":["resources-finalizer.argocd.argoproj.io"]}}' || true
+          done
 
-          if [ -n "$services" ]; then
-            while IFS=$'\t' read -r namespace name; do
-              echo "Deleting LoadBalancer Service $namespace/$name"
-              kubectl delete service "$name" -n "$namespace" --wait=false || true
-            done <<< "$services"
-          else
-            echo "No LoadBalancer Services found."
-          fi
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init - Argo CD Bootstrap
+        working-directory: terraform/envs/argocd-bootstrap
+        run: terraform init -input=false
+
+      - name: Destroy Argo CD Bootstrap
+        working-directory: terraform/envs/argocd-bootstrap
+        run: terraform destroy -input=false -auto-approve -var="environment=dev"
 
       - name: Wait for Argo CD Applications to be deleted
         run: |
-          if kubectl api-resources --api-group=argoproj.io -o name | grep -q '^applications$'; then
-            kubectl wait --for=delete applications.argoproj.io --all -n argocd --timeout=10m || true
-          fi
+          for i in {1..60}; do
+            count=$(kubectl get applications.argoproj.io -n argocd --no-headers 2>/dev/null | wc -l | tr -d ' ')
+            echo "Argo CD Applications remaining: $count"
+
+            if [ "$count" -eq 0 ]; then
+              echo "All Argo CD Applications have been deleted."
+              exit 0
+            fi
+
+            sleep 10
+          done
+
+          echo "ERROR: Argo CD Applications still exist after 10 minutes."
+          kubectl get applications.argoproj.io -n argocd -o wide || true
+          exit 1
 
       - name: Wait for Kubernetes LoadBalancer Services to disappear
         run: |
@@ -145,11 +150,8 @@ jobs:
             --output table
           exit 1
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-
-      - name: Terraform Init
+      - name: Terraform Init - Dev
         run: terraform init -input=false
 
-      - name: Terraform Destroy
+      - name: Terraform Destroy Dev Infrastructure
         run: terraform destroy -input=false -auto-approve
