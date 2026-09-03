@@ -10,6 +10,7 @@ permissions:
 env:
   AWS_REGION: eu-west-2
   AWS_ROLE_ARN: arn:aws:iam::557690622944:role/eks-v1-terraform-dev
+  CLUSTER_NAME: eks-v1-dev
 
 jobs:
   destroy:
@@ -35,6 +36,114 @@ jobs:
 
       - name: Verify AWS identity
         run: aws sts get-caller-identity
+
+      - name: Configure kubectl for EKS
+        run: aws eks update-kubeconfig --region "$AWS_REGION" --name "$CLUSTER_NAME"
+
+      - name: Stop Argo CD reconciliation
+        run: |
+          echo "Disabling automated sync for all Argo CD Applications..."
+          apps=$(kubectl get applications.argoproj.io -n argocd -o name 2>/dev/null || true)
+
+          if [ -z "$apps" ]; then
+            echo "No Argo CD Applications found."
+            exit 0
+          fi
+
+          for app in $apps; do
+            echo "Disabling automation for $app"
+            kubectl patch "$app" -n argocd --type merge \
+              -p '{"spec":{"syncPolicy":{"automated":null}}}' || true
+          done
+
+          echo "Argo CD automated sync/self-heal is now disabled for the current Applications."
+
+      - name: Delete Argo CD Applications and GitOps workloads
+        run: |
+          apps=$(kubectl get applications.argoproj.io -n argocd -o name 2>/dev/null || true)
+
+          if [ -z "$apps" ]; then
+            echo "No Argo CD Applications to delete."
+          else
+            # Ensure Application deletion cascades to the Kubernetes resources it manages.
+            for app in $apps; do
+              kubectl patch "$app" -n argocd --type merge \
+                -p '{"metadata":{"finalizers":["resources-finalizer.argocd.argoproj.io"]}}' || true
+            done
+
+            for app in $apps; do
+              echo "Deleting $app and its managed resources"
+              kubectl delete "$app" -n argocd --wait=false || true
+            done
+          fi
+
+          # Do not allow any remaining LoadBalancer Service to survive into Terraform destroy.
+          # These Services are what cause the cloud load balancers to exist.
+          services=$(kubectl get svc -A -o json |
+            jq -r '.items[] | select(.spec.type == "LoadBalancer") | [.metadata.namespace,.metadata.name] | @tsv')
+
+          if [ -n "$services" ]; then
+            while IFS=$'\t' read -r namespace name; do
+              echo "Deleting LoadBalancer Service $namespace/$name"
+              kubectl delete service "$name" -n "$namespace" --wait=false || true
+            done <<< "$services"
+          else
+            echo "No LoadBalancer Services found."
+          fi
+
+      - name: Wait for Argo CD Applications to be deleted
+        run: |
+          if kubectl api-resources --api-group=argoproj.io -o name | grep -q '^applications$'; then
+            kubectl wait --for=delete applications.argoproj.io --all -n argocd --timeout=10m || true
+          fi
+
+      - name: Wait for Kubernetes LoadBalancer Services to disappear
+        run: |
+          for i in {1..60}; do
+            remaining=$(kubectl get svc -A -o json |
+              jq '[.items[] | select(.spec.type == "LoadBalancer")] | length')
+
+            echo "LoadBalancer Services remaining: $remaining"
+
+            if [ "$remaining" -eq 0 ]; then
+              echo "All LoadBalancer Services have been removed."
+              exit 0
+            fi
+
+            sleep 10
+          done
+
+          echo "ERROR: LoadBalancer Services are still present after 10 minutes."
+          kubectl get svc -A
+          exit 1
+
+      - name: Wait for cluster-owned AWS load balancers to disappear
+        run: |
+          echo "Waiting for AWS load balancers tagged for $CLUSTER_NAME to disappear..."
+
+          for i in {1..60}; do
+            count=$(aws resourcegroupstaggingapi get-resources \
+              --resource-type-filters elasticloadbalancing:loadbalancer \
+              --tag-filters "Key=kubernetes.io/cluster/$CLUSTER_NAME" \
+              --query 'length(ResourceTagMappingList)' \
+              --output text)
+
+            echo "Cluster-owned load balancers remaining: $count"
+
+            if [ "$count" = "0" ] || [ "$count" = "None" ]; then
+              echo "Cluster-owned load balancers have been removed."
+              exit 0
+            fi
+
+            sleep 10
+          done
+
+          echo "ERROR: Cluster-owned load balancers still exist after 10 minutes."
+          aws resourcegroupstaggingapi get-resources \
+            --resource-type-filters elasticloadbalancing:loadbalancer \
+            --tag-filters "Key=kubernetes.io/cluster/$CLUSTER_NAME" \
+            --output table
+          exit 1
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
