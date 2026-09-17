@@ -185,14 +185,13 @@ data "aws_security_group" "eks_cluster" {
   depends_on = [module.eks]
 }
 
-resource "aws_security_group_rule" "ci_runner_to_eks_api" {
-  type              = "ingress"
+resource "aws_vpc_security_group_ingress_rule" "ci_runner_to_eks_api" {
   security_group_id = data.aws_security_group.eks_cluster.id
 
-  protocol    = "tcp"
+  cidr_ipv4   = var.ci_runner_subnet_cidr
   from_port   = 443
+  ip_protocol = "tcp"
   to_port     = 443
-  cidr_blocks = [var.ci_runner_subnet_cidr]
 
   description = "Allow the private CI runner subnet to reach the EKS Kubernetes API."
 }
