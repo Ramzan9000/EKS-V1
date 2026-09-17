@@ -13,9 +13,9 @@ variable "requester_vpc_cidr" {
   description = "CIDR block of the requester VPC."
 }
 
-variable "requester_route_table_id" {
-  type        = string
-  description = "Route table used by the requester subnet that needs peer access."
+variable "requester_route_table_ids" {
+  type        = set(string)
+  description = "Route tables in the requester VPC that need peer access."
 }
 
 variable "accepter_vpc_id" {
