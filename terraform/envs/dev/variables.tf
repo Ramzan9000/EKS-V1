@@ -157,3 +157,8 @@ variable "aws_region" {
 }
 
 
+
+variable "ci_runner_subnet_cidr" {
+  type        = string
+  description = "CIDR block of the private subnet used by the CI runner."
+}
