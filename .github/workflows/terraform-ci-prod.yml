@@ -27,6 +27,8 @@ jobs:
     name: Terraform Prod
     runs-on: ubuntu-latest
 
+    environment: production
+
     defaults:
       run:
         working-directory: terraform/envs/prod
@@ -68,6 +70,4 @@ jobs:
 
       - name: Terraform Apply
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        environment: production
         run: terraform apply -input=false -auto-approve tfplan
-
