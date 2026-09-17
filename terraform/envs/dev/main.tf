@@ -175,3 +175,24 @@ module "argocd" {
     module.node_groups
   ]
 }
+
+data "aws_security_group" "eks_cluster" {
+  filter {
+    name   = "tag:aws:eks:cluster-name"
+    values = [var.cluster_name]
+  }
+
+  depends_on = [module.eks]
+}
+
+resource "aws_security_group_rule" "ci_runner_to_eks_api" {
+  type              = "ingress"
+  security_group_id = data.aws_security_group.eks_cluster.id
+
+  protocol    = "tcp"
+  from_port   = 443
+  to_port     = 443
+  cidr_blocks = [var.ci_runner_subnet_cidr]
+
+  description = "Allow the private CI runner subnet to reach the EKS Kubernetes API."
+}
