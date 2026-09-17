@@ -12,3 +12,18 @@ output "ci_private_subnet_id" {
   value       = module.ci_vpc.private_subnet_id
   description = "Private subnet ID for the CI runner."
 }
+
+output "ci_runner_instance_id" {
+  value       = module.ci_runner.instance_id
+  description = "CI runner EC2 instance ID."
+}
+
+output "ci_runner_private_ip" {
+  value       = module.ci_runner.private_ip
+  description = "Private IP address of the CI runner."
+}
+
+output "ci_runner_security_group_id" {
+  value       = module.ci_runner.security_group_id
+  description = "Security group ID of the CI runner."
+}
