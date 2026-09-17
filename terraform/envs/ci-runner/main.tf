@@ -32,7 +32,7 @@ data "aws_route_tables" "eks" {
 module "vpc_peering" {
   source = "../../modules/vpc_peering"
 
-  name = "$" + "{var.name}-to-eks"
+  name = "${var.name}-to-eks"
 
   requester_vpc_id         = module.ci_vpc.vpc_id
   requester_vpc_cidr       = module.ci_vpc.vpc_cidr_block
