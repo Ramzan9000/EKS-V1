@@ -27,3 +27,8 @@ variable "availability_zone" {
   type        = string
   description = "Availability Zone for the CI VPC."
 }
+
+variable "eks_vpc_cidr" {
+  type        = string
+  description = "CIDR block of the existing EKS VPC."
+}
