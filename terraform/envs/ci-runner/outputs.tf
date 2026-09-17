@@ -27,3 +27,7 @@ output "ci_runner_security_group_id" {
   value       = module.ci_runner.security_group_id
   description = "Security group ID of the CI runner."
 }
+output "vpc_peering_connection_id" {
+  value       = module.vpc_peering.peering_connection_id
+  description = "VPC peering connection ID between the CI and EKS VPCs."
+}
