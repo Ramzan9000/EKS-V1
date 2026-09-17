@@ -9,3 +9,5 @@ availability_zone = "eu-west-2a"
 
 public_subnet_cidr  = "10.20.1.0/24"
 private_subnet_cidr = "10.20.11.0/24"
+
+eks_vpc_cidr = "10.0.0.0/16"
