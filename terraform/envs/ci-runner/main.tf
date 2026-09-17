@@ -17,29 +17,3 @@ module "ci_runner" {
 
   depends_on = [module.ci_vpc]
 }
-
-data "aws_vpc" "eks" {
-  filter {
-    name   = "cidr-block"
-    values = [var.eks_vpc_cidr]
-  }
-}
-
-data "aws_route_tables" "eks" {
-  vpc_id = data.aws_vpc.eks.id
-}
-
-module "vpc_peering" {
-  source = "../../modules/vpc_peering"
-
-  name = "${var.name}-to-eks"
-
-  requester_vpc_id         = module.ci_vpc.vpc_id
-  requester_vpc_cidr       = module.ci_vpc.vpc_cidr_block
-  requester_route_table_id = module.ci_vpc.private_route_table_id
-
-  accepter_vpc_id          = data.aws_vpc.eks.id
-  accepter_vpc_cidr        = data.aws_vpc.eks.cidr_block
-  accepter_route_table_ids = toset(data.aws_route_tables.eks.ids)
-
-}
