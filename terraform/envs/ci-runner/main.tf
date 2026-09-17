@@ -42,7 +42,4 @@ module "vpc_peering" {
   accepter_vpc_cidr        = data.aws_vpc.eks.cidr_block
   accepter_route_table_ids = toset(data.aws_route_tables.eks.ids)
 
-  depends_on = [
-    module.ci_runner
-  ]
 }
