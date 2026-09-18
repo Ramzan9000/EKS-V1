@@ -15,6 +15,18 @@ data "aws_iam_policy_document" "runner_assume_role" {
   }
 }
 
+data "aws_iam_policy_document" "eks_describe_cluster" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "eks:DescribeCluster"
+    ]
+
+    resources = ["*"]
+  }
+}
+
 resource "aws_iam_role" "runner" {
   name               = "${var.name}-role"
   assume_role_policy = data.aws_iam_policy_document.runner_assume_role.json
@@ -27,6 +39,12 @@ resource "aws_iam_role" "runner" {
 resource "aws_iam_role_policy_attachment" "ssm" {
   role       = aws_iam_role.runner.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+resource "aws_iam_role_policy" "eks_describe_cluster" {
+  name   = "${var.name}-eks-describe-cluster"
+  role   = aws_iam_role.runner.id
+  policy = data.aws_iam_policy_document.eks_describe_cluster.json
 }
 
 resource "aws_iam_instance_profile" "runner" {
