@@ -1,1 +1,1 @@
-Trigger Argo CD ownership cleanup.
+Trigger observability diagnostics.
