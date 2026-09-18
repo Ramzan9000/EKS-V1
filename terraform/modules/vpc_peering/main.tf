@@ -21,14 +21,14 @@ resource "aws_vpc_peering_connection_options" "this" {
 }
 
 resource "aws_route" "requester_to_accepter" {
-  for_each                  = toset(var.requester_route_table_ids)
+  for_each                  = var.requester_route_table_ids
   route_table_id            = each.value
   destination_cidr_block    = var.accepter_vpc_cidr
   vpc_peering_connection_id = aws_vpc_peering_connection.this.id
 }
 
 resource "aws_route" "accepter_to_requester" {
-  for_each                  = toset(var.accepter_route_table_ids)
+  for_each                  = var.accepter_route_table_ids
   route_table_id            = each.value
   destination_cidr_block    = var.requester_vpc_cidr
   vpc_peering_connection_id = aws_vpc_peering_connection.this.id
