@@ -1,1 +1,1 @@
-Trigger Dev Terraform CI on the private runner - Checkov skip fix.
+Trigger Dev Terraform CI with Argo CD bootstrap.
