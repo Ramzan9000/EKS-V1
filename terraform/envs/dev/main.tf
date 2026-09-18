@@ -1,7 +1,7 @@
 ### vpc module ###
 
 module "vpc" {
-  source = "../../modules/vpc"
+  source = "../../modules/Vpc"
 
   cidr_block               = var.cidr_block
   public_subnet_az_1_cidr  = var.public_subnet_az_1_cidr
@@ -16,7 +16,7 @@ module "vpc" {
 ### ECR module ###
 
 module "ecr" {
-  source        = "../../modules/ecr"
+  source        = "../../modules/ECR"
   ecr_repo_name = var.ecr_repo_name
 
 }
@@ -54,7 +54,7 @@ data "aws_route_table" "eks_private_2" {
 ### iam module ###
 
 module "iam" {
-  source = "../../modules/iam"
+  source = "../../modules/IAM"
 
   cluster_name = var.cluster_name
 
@@ -146,7 +146,7 @@ module "node_groups" {
 ### EKS module ###
 
 module "eks" {
-  source = "../../modules/eks"
+  source = "../../modules/EKS"
 
   cluster_name       = var.cluster_name
   cluster_role_arn   = module.iam.eks_cluster_role_arn
