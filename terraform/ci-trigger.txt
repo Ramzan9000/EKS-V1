@@ -1,1 +1,1 @@
-Trigger bootstrap ownership fix and health check.
+Trigger Argo CD ownership cleanup.
