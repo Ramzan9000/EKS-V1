@@ -234,3 +234,22 @@ resource "aws_vpc_security_group_ingress_rule" "ci_runner_to_eks_api" {
 
   description = "Allow the private CI runner subnet to reach the EKS Kubernetes API."
 }
+
+
+# EBS CSI managed add-on for persistent volumes
+resource "aws_eks_addon" "ebs_csi" {
+  cluster_name = module.eks.cluster_name
+  addon_name   = "aws-ebs-csi-driver"
+
+  pod_identity_association {
+    role_arn        = module.iam.ebs_csi_role_arn
+    service_account = "ebs-csi-controller-sa"
+  }
+
+  depends_on = [
+    module.eks,
+    module.iam
+  ]
+}
+
+# CI trigger: apply EBS CSI and observability fixes.
