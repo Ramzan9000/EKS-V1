@@ -1,0 +1,42 @@
+name: Terraform State Diagnose
+
+on:
+  push:
+    paths:
+      - "state-diagnose-trigger.txt"
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: eu-west-2
+  AWS_ROLE_ARN: arn:aws:iam::557690622944:role/eks-v1-terraform-dev
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: terraform/envs/dev
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+      - name: Terraform Init
+        run: terraform init -input=false
+      - name: Inspect peering route state
+        run: |
+          set -euo pipefail
+          echo "=== Matching state addresses ==="
+          terraform state list | grep 'module.vpc_peering.aws_route.accepter_to_requester' || true
+          echo "=== Old state address ==="
+          terraform state show 'module.vpc_peering.aws_route.accepter_to_requester["private"]' || true
+          echo "=== Current route-table-ID address ==="
+          terraform state show 'module.vpc_peering.aws_route.accepter_to_requester["rtb-0e7b23e03ecb64589"]' || true
