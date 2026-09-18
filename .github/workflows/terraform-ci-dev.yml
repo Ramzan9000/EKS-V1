@@ -76,10 +76,10 @@ jobs:
       - name: Terraform Validate
         run: terraform validate
 
-      - name: Checkov
+      - name: Checkov - Dev
         uses: bridgecrewio/checkov-action@v12
         with:
-          directory: terraform
+          directory: terraform/envs/dev
           framework: terraform
           soft_fail: false
 
