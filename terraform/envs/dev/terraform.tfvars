@@ -91,4 +91,3 @@ cert_manager_service_account = "cert-manager"
 
 ci_runner_subnet_cidr = "10.20.11.0/24"
 
-#test#
