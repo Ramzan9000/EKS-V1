@@ -4,7 +4,7 @@
 
 image:
   repository: "557690622944.dkr.ecr.eu-west-2.amazonaws.com/eks-2048"
-  tag: "abc123"
+  tag: "346546e9f8bc362f0059f3bfbaae8a4be43a664f"
   pullPolicy: IfNotPresent
 
 
