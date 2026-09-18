@@ -174,14 +174,14 @@ module "vpc_peering" {
 
   name = "eks-v1-ci-to-eks"
 
-  requester_vpc_id = module.vpc.vpc_id
+  requester_vpc_id   = module.vpc.vpc_id
   requester_vpc_cidr = module.vpc.vpc_cidr_block
   requester_route_table_ids = toset([
     data.aws_route_table.eks_private_1.id,
     data.aws_route_table.eks_private_2.id
   ])
 
-  accepter_vpc_id = data.terraform_remote_state.ci_runner.outputs.ci_vpc_id
+  accepter_vpc_id   = data.terraform_remote_state.ci_runner.outputs.ci_vpc_id
   accepter_vpc_cidr = data.terraform_remote_state.ci_runner.outputs.ci_vpc_cidr_block
   accepter_route_table_ids = toset([
     data.terraform_remote_state.ci_runner.outputs.ci_private_route_table_id
