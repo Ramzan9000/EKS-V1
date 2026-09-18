@@ -92,3 +92,24 @@ jobs:
       - name: Terraform Apply
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: terraform apply -input=false -auto-approve tfplan
+
+      - name: Argo CD Bootstrap Init
+        working-directory: terraform/envs/argocd-bootstrap
+        run: terraform init -input=false
+
+      - name: Argo CD Bootstrap Validate
+        working-directory: terraform/envs/argocd-bootstrap
+        run: terraform validate
+
+      - name: Argo CD Bootstrap Plan
+        working-directory: terraform/envs/argocd-bootstrap
+        env:
+          TF_VAR_environment: dev
+        run: terraform plan -input=false -out=tfplan
+
+      - name: Argo CD Bootstrap Apply
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        working-directory: terraform/envs/argocd-bootstrap
+        env:
+          TF_VAR_environment: dev
+        run: terraform apply -input=false -auto-approve tfplan
