@@ -14,8 +14,8 @@ variable "requester_vpc_cidr" {
 }
 
 variable "requester_route_table_ids" {
-  type        = map(string)
-  description = "Named route tables in the requester VPC that need peer access."
+  type        = set(string)
+  description = "Route tables in the requester VPC that need peer access."
 }
 
 variable "accepter_vpc_id" {
@@ -29,6 +29,6 @@ variable "accepter_vpc_cidr" {
 }
 
 variable "accepter_route_table_ids" {
-  type        = map(string)
-  description = "Named route tables in the accepter VPC that need a return route."
+  type        = set(string)
+  description = "Route tables in the accepter VPC that need a return route."
 }
