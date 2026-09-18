@@ -9,7 +9,7 @@ permissions:
 
 env:
   AWS_REGION: eu-west-2
-  AWS_ROLE_ARN: arn:aws:iam::557690622944:role/eks-v1-terraform-dev
+  AWS_ROLE_ARN: arn:aws:iam::557690622944:role/eks-destory-dev
   CLUSTER_NAME: eks-v1-dev
 
 jobs:
