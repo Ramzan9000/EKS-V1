@@ -40,3 +40,8 @@ jobs:
           terraform state show 'module.vpc_peering.aws_route.accepter_to_requester["private"]' || true
           echo "=== Current route-table-ID address ==="
           terraform state show 'module.vpc_peering.aws_route.accepter_to_requester["rtb-0e7b23e03ecb64589"]' || true
+          echo "=== AWS route currently present ==="
+          aws ec2 describe-route-tables \
+            --route-table-ids rtb-0e7b23e03ecb64589 \
+            --query 'RouteTables[0].Routes[?DestinationCidrBlock==`10.0.0.0/16`]' \
+            --output json
