@@ -106,10 +106,6 @@ module "pod_identity" {
 
   loki_role_arn = module.iam.loki_role_arn
 
-  external_dns_service_account = var.external_dns_service_account
-
-  loki_role_arn = module.iam.loki_role_arn
-
   loki_namespace = var.loki_namespace
 
   loki_service_account = var.loki_service_account
