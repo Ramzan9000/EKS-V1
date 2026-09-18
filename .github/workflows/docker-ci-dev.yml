@@ -4,9 +4,9 @@ on:
   push:
     branches:
       - dev
+      - main
     paths:
       - "docker/**"
-      - "kubernetes/**"
 
   pull_request:
     branches:
@@ -14,11 +14,6 @@ on:
     paths:
       - "docker/**"
       - "kubernetes/**"
-
-  workflow_run:
-    workflows: ["Terraform CI Dev"]
-    types:
-      - completed
 
 permissions:
   id-token: write
@@ -31,10 +26,6 @@ env:
 
 jobs:
   docker:
-    if: >-
-      github.event_name != 'workflow_run' ||
-      github.event.workflow_run.conclusion == 'success'
-
     name: Build, Push and Update GitOps
     runs-on: ubuntu-latest
 
@@ -66,15 +57,11 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build \
-            -f docker/Dockerfile \
-            -t "${{ steps.image.outputs.image_uri }}:${{ steps.image.outputs.image_tag }}" \
-            .
+          docker build             -f docker/Dockerfile             -t "${{ steps.image.outputs.image_uri }}:${{ steps.image.outputs.image_tag }}"             .
 
       - name: Push Docker image
         run: |
-          docker push \
-            "${{ steps.image.outputs.image_uri }}:${{ steps.image.outputs.image_tag }}"
+          docker push             "${{ steps.image.outputs.image_uri }}:${{ steps.image.outputs.image_tag }}"
 
       - name: Update Helm image tag
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -97,17 +84,14 @@ jobs:
           )
 
           if count != 1:
-              raise SystemExit(
-                  "Could not find exactly one image.tag entry in values.yaml"
-              )
+              raise SystemExit("Could not find exactly one image.tag entry in values.yaml")
 
           path.write_text(text)
           PY
 
       - name: Check Helm values change
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          git diff -- kubernetes/Helm/app/values.yaml
+        run: git diff -- kubernetes/Helm/app/values.yaml
 
       - name: Commit and push image tag
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
