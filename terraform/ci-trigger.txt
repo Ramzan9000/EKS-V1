@@ -1,1 +1,1 @@
-Trigger Dev Terraform CI with Argo CD bootstrap.
+Trigger temporary EKS health check.
