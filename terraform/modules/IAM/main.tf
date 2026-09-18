@@ -383,3 +383,21 @@ resource "aws_iam_role_policy_attachment" "external_dns_route53" {
   role       = aws_iam_role.external_dns.name
   policy_arn = aws_iam_policy.external_dns_route53.arn
 }
+
+# role for the EKS managed EBS CSI add-on
+resource "aws_iam_role" "ebs_csi" {
+  name = "${var.cluster_name}-ebs-csi-role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = { Service = "pods.eks.amazonaws.com" }
+      Action = ["sts:AssumeRole", "sts:TagSession"]
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ebs_csi" {
+  role       = aws_iam_role.ebs_csi.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicyV2"
+}
