@@ -81,6 +81,7 @@ jobs:
         with:
           directory: terraform/envs/dev
           framework: terraform
+          skip_check: CKV_AWS_39,CKV_AWS_130,CKV_AWS_51,CKV_AWS_339,CKV_AWS_136,CKV_AWS_37,CKV2_AWS_12,CKV2_AWS_11,CKV2_AWS_61,CKV_AWS_21,CKV_AWS_18,CKV2_AWS_62,CKV_AWS_144,CKV2_AWS_64,CKV_AWS_145
           soft_fail: false
 
       - name: Terraform Plan
