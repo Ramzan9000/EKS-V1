@@ -38,22 +38,15 @@ jobs:
         working-directory: .
         run: |
           set -euo pipefail
-
-          response=$(curl -sS \
-            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com")
-
+          response=$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com")
           token=$(printf '%s' "$response" | jq -r '.value')
-
           if [ -z "$token" ] || [ "$token" = "null" ]; then
             echo "ERROR: GitHub did not return an OIDC token."
             exit 1
           fi
-
           payload_b64=$(printf '%s' "$token" | cut -d '.' -f2 | tr '_-' '/+')
           while [ $(( ${#payload_b64} % 4 )) -ne 0 ]; do payload_b64="${payload_b64}="; done
           payload=$(printf '%s' "$payload_b64" | base64 -d 2>/dev/null)
-
           echo "GitHub OIDC claims:"
           printf '%s' "$payload" | jq '{iss, aud, sub, repository, repository_id, repository_owner, repository_owner_id, ref, event_name}'
 
@@ -125,17 +118,19 @@ jobs:
         working-directory: .
         run: |
           set -euo pipefail
-
           aws eks update-kubeconfig --region "$AWS_REGION" --name eks-v1-dev
-
-          echo "=== EKS NODES ==="
-          kubectl get nodes -o wide
-
-          echo "=== ALL PODS ==="
-          kubectl get pods -A
-
+          echo "=== STORAGE ==="
+          kubectl get storageclass
+          kubectl get pvc -A
+          echo "=== OBSERVABILITY PODS ==="
+          kubectl get pods -n monitoring -o wide
+          kubectl get pods -n logging -o wide
+          echo "=== OBSERVABILITY EVENTS ==="
+          kubectl get events -n monitoring --sort-by=.lastTimestamp | tail -n 60
+          kubectl get events -n logging --sort-by=.lastTimestamp | tail -n 60
+          echo "=== GRAFANA DESCRIBE ==="
+          kubectl describe pod -n monitoring -l app.kubernetes.io/name=grafana
+          echo "=== LOKI DESCRIBE ==="
+          kubectl describe pod -n logging -l app.kubernetes.io/name=loki
           echo "=== ARGO CD APPLICATIONS ==="
-          kubectl get applications -n argocd
-
-          echo "=== ARGO CD APPLICATION DETAILS ==="
           kubectl get applications -n argocd -o wide
