@@ -50,7 +50,9 @@ jobs:
             exit 1
           fi
 
-          payload=$(printf '%s' "$token" | cut -d '.' -f2 | tr '_-' '/+' | base64 -d 2>/dev/null)
+          payload_b64=$(printf '%s' "$token" | cut -d '.' -f2 | tr '_-' '/+')
+          while [ $(( ${#payload_b64} % 4 )) -ne 0 ]; do payload_b64="${payload_b64}="; done
+          payload=$(printf '%s' "$payload_b64" | base64 -d 2>/dev/null)
 
           echo "GitHub OIDC claims:"
           printf '%s' "$payload" | jq '{iss, aud, sub, repository, repository_id, repository_owner, repository_owner_id, ref, event_name}'
