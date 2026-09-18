@@ -15,7 +15,7 @@ env:
 jobs:
   destroy:
     name: Terraform Destroy Dev
-    runs-on: [self-hosted, linux, x64, eks-v1-ci]
+    runs-on: [self-hosted, linux, x64]
 
     environment:
       name: development
