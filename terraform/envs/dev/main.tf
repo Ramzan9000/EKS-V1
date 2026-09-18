@@ -106,6 +106,10 @@ module "pod_identity" {
 
   loki_role_arn = module.iam.loki_role_arn
 
+  external_dns_service_account = var.external_dns_service_account
+
+  loki_role_arn = module.iam.loki_role_arn
+
   loki_namespace = var.loki_namespace
 
   loki_service_account = var.loki_service_account
@@ -204,31 +208,10 @@ module "aws_load_balancer_controller" {
   ]
 }
 
-
 ### argocd module ###
 
 module "argocd" {
   source = "../../modules/argocd"
-
-  cluster_name = module.eks.cluster_name
-  eks_endpoint = module.eks.cluster_endpoint
-
-  kubernetes = {
-    host                   = module.eks.cluster_endpoint
-    cluster_ca_certificate = module.eks.cluster_certificate_authority_data
-    exec = {
-      api_version = "client.authentication.k8s.io/v1beta1"
-      command     = "aws"
-      args = [
-        "eks",
-        "get-token",
-        "--cluster-name",
-        module.eks.cluster_name,
-        "--region",
-        var.aws_region
-      ]
-    }
-  }
 
   depends_on = [
     module.eks,
