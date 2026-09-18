@@ -101,6 +101,13 @@ jobs:
         working-directory: terraform/envs/argocd-bootstrap
         run: terraform validate
 
+      - name: Remove Argo CD Root App from Terraform State
+        working-directory: terraform/envs/argocd-bootstrap
+        run: |
+          if terraform state list | grep -Fxq 'kubernetes_manifest.root_app'; then
+            terraform state rm kubernetes_manifest.root_app
+          fi
+
       - name: Argo CD Bootstrap Plan
         working-directory: terraform/envs/argocd-bootstrap
         env:
