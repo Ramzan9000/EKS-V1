@@ -1,0 +1,59 @@
+name: EKS API Connectivity Diagnose
+
+on:
+  push:
+    paths:
+      - "eks-api-connectivity-trigger.txt"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  AWS_REGION: eu-west-2
+
+jobs:
+  connectivity:
+    name: Test GitHub-hosted runner to EKS API
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::557690622944:role/eks-v1-terraform-dev
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Get EKS endpoint
+        id: eks
+        run: |
+          set -euo pipefail
+          endpoint=$(aws eks describe-cluster             --name eks-v1-dev             --region "$AWS_REGION"             --query 'cluster.endpoint'             --output text)
+          echo "endpoint=$endpoint" >> "$GITHUB_OUTPUT"
+          echo "EKS endpoint: $endpoint"
+
+      - name: DNS and TCP connectivity
+        env:
+          EKS_ENDPOINT: ${{ steps.eks.outputs.endpoint }}
+        run: |
+          set -euo pipefail
+          host=$(printf '%s' "$EKS_ENDPOINT" | sed 's#https://##; s#/.*##')
+          echo "Resolved host: $host"
+          getent ahostsv4 "$host" || true
+          echo "Testing TCP connection to $host:443"
+          timeout 10 bash -c "</dev/tcp/$host/443"
+          echo "TCP 443 connection succeeded"
+
+      - name: HTTPS connectivity
+        env:
+          EKS_ENDPOINT: ${{ steps.eks.outputs.endpoint }}
+        run: |
+          set -euo pipefail
+          echo "Testing HTTPS connection to EKS API"
+          curl -sv --connect-timeout 10 --max-time 15 "$EKS_ENDPOINT/version" -o /dev/null
+          echo "HTTPS connection succeeded"
+
+      - name: Runner public IP
+        run: |
+          set -euo pipefail
+          echo "GitHub-hosted runner public IP:"
+          curl -4 --connect-timeout 10 --max-time 15 https://checkip.amazonaws.com
