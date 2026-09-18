@@ -30,7 +30,8 @@ cluster_name = "eks-v1-dev"
 kubernetes_version = "1.36"
 
 eks_public_access_cidrs = [
-  "151.226.76.8/32"
+  "151.226.76.8/32",
+  "51.24.211.93/32"
 ]
 
 
