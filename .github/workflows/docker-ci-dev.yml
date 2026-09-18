@@ -1,19 +1,10 @@
 name: Docker CI Dev
 
 on:
-  push:
-    branches:
-      - dev
-      - main
-    paths:
-      - "docker/**"
-
-  pull_request:
-    branches:
-      - main
-    paths:
-      - "docker/**"
-      - "kubernetes/**"
+  workflow_run:
+    workflows: ["Terraform CI Dev"]
+    types:
+      - completed
 
 permissions:
   id-token: write
@@ -26,12 +17,15 @@ env:
 
 jobs:
   docker:
+    if: github.event.workflow_run.conclusion == 'success'
     name: Build, Push and Update GitOps
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: main
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -50,7 +44,7 @@ jobs:
         id: image
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}
+          IMAGE_TAG: ${{ github.event.workflow_run.head_sha }}
         run: |
           echo "image_uri=${REGISTRY}/${ECR_REPOSITORY}" >> "$GITHUB_OUTPUT"
           echo "image_tag=${IMAGE_TAG}" >> "$GITHUB_OUTPUT"
@@ -64,7 +58,6 @@ jobs:
           docker push             "${{ steps.image.outputs.image_uri }}:${{ steps.image.outputs.image_tag }}"
 
       - name: Update Helm image tag
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
           IMAGE_TAG: ${{ steps.image.outputs.image_tag }}
         run: |
@@ -90,11 +83,9 @@ jobs:
           PY
 
       - name: Check Helm values change
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: git diff -- kubernetes/Helm/app/values.yaml
 
       - name: Commit and push image tag
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -106,5 +97,5 @@ jobs:
             exit 0
           fi
 
-          git commit -m "chore: update image to ${GITHUB_SHA}"
+          git commit -m "chore: update image to ${{ github.event.workflow_run.head_sha }}"
           git push
