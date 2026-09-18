@@ -82,6 +82,12 @@ resource "aws_instance" "runner" {
   iam_instance_profile        = aws_iam_instance_profile.runner.name
   vpc_security_group_ids      = [aws_security_group.runner.id]
 
+  lifecycle {
+    ignore_changes = [
+      ami
+    ]
+  }
+
   user_data = <<-EOF
     #!/bin/bash
     set -euo pipefail
