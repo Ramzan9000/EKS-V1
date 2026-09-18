@@ -1,1 +1,1 @@
-Trigger temporary EKS health check.
+Trigger bootstrap ownership fix and health check.
