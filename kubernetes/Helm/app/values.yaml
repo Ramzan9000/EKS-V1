@@ -4,7 +4,7 @@
 
 image:
   repository: "557690622944.dkr.ecr.eu-west-2.amazonaws.com/eks-2048"
-  tag: "0b1f73769df8400f61509c7f77198b48b0aece64"
+  tag: "6377ae7311cbc9e42383c1d3841d61a3d5c586b8"
   pullPolicy: IfNotPresent
 
 
