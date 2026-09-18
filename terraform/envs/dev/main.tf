@@ -176,16 +176,16 @@ module "vpc_peering" {
 
   requester_vpc_id   = module.vpc.vpc_id
   requester_vpc_cidr = module.vpc.cidr_ipv4
-  requester_route_table_ids = toset([
-    data.aws_route_table.eks_private_1.id,
-    data.aws_route_table.eks_private_2.id
-  ])
+  requester_route_table_ids = {
+    private_1 = data.aws_route_table.eks_private_1.id
+    private_2 = data.aws_route_table.eks_private_2.id
+  }
 
   accepter_vpc_id   = data.terraform_remote_state.ci_runner.outputs.ci_vpc_id
   accepter_vpc_cidr = data.terraform_remote_state.ci_runner.outputs.ci_vpc_cidr_block
-  accepter_route_table_ids = toset([
-    data.terraform_remote_state.ci_runner.outputs.ci_private_route_table_id
-  ])
+  accepter_route_table_ids = {
+    private = data.terraform_remote_state.ci_runner.outputs.ci_private_route_table_id
+  }
 }
 
 ### aws_load_balancer_controller module ###
@@ -204,33 +204,34 @@ module "aws_load_balancer_controller" {
   ]
 }
 
+
 ### argocd module ###
 
 module "argocd" {
   source = "../../modules/argocd"
 
+  cluster_name = module.eks.cluster_name
+  eks_endpoint = module.eks.cluster_endpoint
+
+  kubernetes = {
+    host                   = module.eks.cluster_endpoint
+    cluster_ca_certificate = module.eks.cluster_certificate_authority_data
+    exec = {
+      api_version = "client.authentication.k8s.io/v1beta1"
+      command     = "aws"
+      args = [
+        "eks",
+        "get-token",
+        "--cluster-name",
+        module.eks.cluster_name,
+        "--region",
+        var.aws_region
+      ]
+    }
+  }
+
   depends_on = [
     module.eks,
     module.node_groups
   ]
-}
-
-data "aws_security_group" "eks_cluster" {
-  filter {
-    name   = "tag:aws:eks:cluster-name"
-    values = [var.cluster_name]
-  }
-
-  depends_on = [module.eks]
-}
-
-resource "aws_vpc_security_group_ingress_rule" "ci_runner_to_eks_api" {
-  security_group_id = data.aws_security_group.eks_cluster.id
-
-  cidr_ipv4   = var.ci_runner_subnet_cidr
-  from_port   = 443
-  ip_protocol = "tcp"
-  to_port     = 443
-
-  description = "Allow the private CI runner subnet to reach the EKS Kubernetes API."
 }
