@@ -77,6 +77,12 @@ resource "aws_route_table" "private" {
     nat_gateway_id = aws_nat_gateway.this.id
   }
 
+  lifecycle {
+    ignore_changes = [
+      route
+    ]
+  }
+
   tags = {
     Name = "${var.name}-private"
   }
