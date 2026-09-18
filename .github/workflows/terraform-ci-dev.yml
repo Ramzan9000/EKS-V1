@@ -113,3 +113,22 @@ jobs:
         env:
           TF_VAR_environment: dev
         run: terraform apply -input=false -auto-approve tfplan
+
+      - name: Temporary EKS Health Check
+        working-directory: .
+        run: |
+          set -euo pipefail
+
+          aws eks update-kubeconfig --region "$AWS_REGION" --name eks-v1-dev
+
+          echo "=== EKS NODES ==="
+          kubectl get nodes -o wide
+
+          echo "=== ALL PODS ==="
+          kubectl get pods -A
+
+          echo "=== ARGO CD APPLICATIONS ==="
+          kubectl get applications -n argocd
+
+          echo "=== ARGO CD APPLICATION DETAILS ==="
+          kubectl get applications -n argocd -o wide
