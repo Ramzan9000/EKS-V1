@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - "state-diagnose-trigger.txt"
+      - "state-diagnose-trigger-2.txt"
 
 permissions:
   id-token: write
