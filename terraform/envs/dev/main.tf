@@ -251,3 +251,5 @@ resource "aws_eks_addon" "ebs_csi" {
     module.iam
   ]
 }
+
+# CI trigger: apply EBS CSI and observability fixes.
